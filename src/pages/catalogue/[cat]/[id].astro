@@ -1,0 +1,173 @@
+---
+import Base from '../../../layouts/Base.astro'
+import ProductCard from '../../../components/ProductCard.astro'
+import { PRODUCTS, shopCat, itemLabel, photoNote } from '../../../data/shop.js'
+import { waHref, telHref } from '../../../lib/contact.js'
+import { site } from '../../../data/site.js'
+import { abs } from '../../../lib/seo.js'
+
+export function getStaticPaths() {
+  return PRODUCTS.map((p) => ({ params: { cat: p.category, id: p.id }, props: { p } }))
+}
+const { p } = Astro.props
+const c = shopCat(p.category)
+const label = itemLabel(p)
+const brandLine = p.name.toUpperCase().startsWith(p.brand) ? p.name : `${p.brand} ${p.name}`
+const wa = waHref(label)
+const form = `/enquiry/?type=${encodeURIComponent(label)}`
+const finishes = p.finishes
+const sizes = p.sizes
+const pages = p.source.pages || [p.source.page]
+const related = PRODUCTS.filter((x) => x.subcategory === p.subcategory && x.id !== p.id).slice(0, 4)
+const img = p.images[0]
+// first few finishes and sizes, then a count, so every description stays readable and under about 160 characters
+const few = (a, n, word) => (a.length > n ? `${a.slice(0, n).join(', ')} and ${a.length - n} more ${word}` : a.join(', '))
+const desc = `${brandLine}${finishes.length ? ` in ${few(finishes, 2, 'finishes')}` : ''}${sizes.length ? `, ${few(sizes, 3, 'sizes')}` : ''}. Price on request at Birdi Hardwares, Ludhiana.`
+// ItemPage, not Product: Google's Product markup needs a price, rating or review, and the catalogue publishes none.
+// This describes only what the page shows: the item, its catalogue photos and where it sits in the catalogue.
+const jsonld = [{
+  '@context': 'https://schema.org', '@type': 'ItemPage', name: brandLine, url: abs(p.url), description: desc,
+  isPartOf: { '@type': 'CollectionPage', name: c.title, url: abs(`/catalogue/${c.slug}/`) },
+  ...(img ? { primaryImageOfPage: { '@type': 'ImageObject', url: abs(img.src), width: img.w, height: img.h, caption: `${photoNote(p)}: ${img.view}` } } : {}),
+}]
+---
+<Base title={brandLine} description={desc}
+  path={p.url} crumbs={[{ name: 'Catalogue', href: '/catalogue/' }, { name: c.title, href: `/catalogue/${c.slug}/` }, { name: p.name, href: p.url }]} jsonld={jsonld} image={img?.src}>
+  <main id="main" class="pdp">
+    <div class="pdp-media">
+      {img ? (
+        <figure class="pdp-figure">
+          <div class={`pdp-main${p.brand === 'ROOT' ? ' on-white' : ''}`}>
+            <img src={img.src} alt={`${brandLine}: ${img.view}`} width={img.w} height={img.h} fetchpriority="high" decoding="async" data-main />
+          </div>
+          <figcaption class="fine" data-cap>{photoNote(p)} · {img.view}</figcaption>
+        </figure>
+      ) : <p class="prod-noimg">No photo in the catalogue</p>}
+      {p.images.length > 1 && (
+        <ul class="pdp-thumbs" aria-label="More views">
+          {p.images.map((im, i) => (
+            <li><button type="button" class="pdp-thumb" aria-pressed={i === 0 ? 'true' : 'false'} data-src={im.src} data-w={im.w} data-h={im.h} data-view={im.view} aria-label={`Show view ${i + 1}: ${im.view}`}>
+              <img src={im.thumb || im.src} alt="" width={im.w} height={im.h} loading="lazy" decoding="async" />
+            </button></li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    <div class="pdp-info">
+      <p class="kicker">{p.brand}{p.series ? ` · ${p.series.join(' and ')} series` : ''} · {p.subcategory}</p>
+      <h1 class="pdp-title">{p.name}</h1>
+      <ul class="pdp-tags">
+        {p.code && <li>Model <strong>{p.code}</strong></li>}
+        {finishes.length > 0 && <li>{finishes.length} finish{finishes.length > 1 ? 'es' : ''}</li>}
+        {sizes.length > 0 && <li>{sizes.length} size{sizes.length > 1 ? 's' : ''}</li>}
+        <li class="price">Price on request</li>
+      </ul>
+
+      <form class="variant" data-variant aria-label="Choose finish and size for your enquiry" data-wa={site.whatsapp} data-label={label}>
+        {finishes.length > 0 && (
+          <label class="field">
+            <span class="field-label">Finish</span>
+            <select name="finish" data-finish>
+              {finishes.length > 1 && <option value="">Any or not sure</option>}
+              {finishes.map((f) => <option value={f}>{f}</option>)}
+            </select>
+          </label>
+        )}
+        {sizes.length > 0 && (
+          <label class="field">
+            <span class="field-label">Size</span>
+            <select name="size" data-size>
+              {sizes.length > 1 && <option value="">Any or not sure</option>}
+              {sizes.map((s) => <option value={s}>{s}</option>)}
+            </select>
+          </label>
+        )}
+        <script type="application/json" data-combos set:html={JSON.stringify(p.variants.map((v) => [v.finish || '', v.size || '']))} />
+        <p class="fine variant-note" data-note aria-live="polite"></p>
+        <p class="variant-summary"><span class="field-label">Your enquiry</span> <span data-summary>{label}</span></p>
+        <div class="contact-actions">
+          {wa && <a class="btn btn-primary btn-wa" href={wa} target="_blank" rel="noopener" data-wa-link>Ask on WhatsApp<span class="sr-only"> about {label} (opens in a new tab)</span></a>}
+          {telHref && <a class="btn btn-quiet" href={telHref}>Call {site.phone.display}</a>}
+          <a class="link" href={form} data-form-link>Quotation form</a>
+        </div>
+        <p class="fine">WhatsApp opens with the product, finish and size filled in. You check the message and press send yourself.</p>
+      </form>
+
+      <dl class="spec">
+        <dt>Brand</dt><dd>{p.brand}</dd>
+        {p.code && (<><dt>Model</dt><dd>{p.code}</dd></>)}
+        <dt>Category</dt><dd><a href={`/catalogue/${c.slug}/`}>{c.title}</a> · {p.subcategory}</dd>
+        {p.series && (<><dt>Series</dt><dd>{p.series.join(', ')}</dd></>)}
+        {finishes.length > 0 && (<><dt>Finishes</dt><dd>{finishes.join(', ')}</dd></>)}
+        {sizes.length > 0 && (<><dt>Sizes</dt><dd>{sizes.join(', ')}</dd></>)}
+        {p.specs.map((s) => (<><dt>Note</dt><dd>{s}</dd></>))}
+        <dt>Source</dt><dd>{p.brand} catalogue, page {pages.join(', ')}</dd>
+      </dl>
+      {p.unresolved.length > 0 && <p class="fine">Not clear in the catalogue: {p.unresolved.join(' ')} Ask the shop to confirm.</p>}
+      <p class="fine">Not every finish is made in every size. The shop confirms availability and price.</p>
+      {c.sizeNote && <p class="fine">{c.sizeNote}</p>}
+      {c.guide && <a class="link" href={`/catalogue/${c.slug}/#choosing`}>Questions about choosing {c.title.toLowerCase()}</a>}
+    </div>
+
+    {related.length > 0 && (
+      <section class="band pdp-related" aria-labelledby="rel-h">
+        <h2 id="rel-h" class="band-title">More {p.subcategory.toLowerCase()}</h2>
+        <ul class="prod-grid">{related.map((r) => <ProductCard p={r} />)}</ul>
+        <a class="link" href={`/catalogue/${c.slug}/`}>All {c.title.toLowerCase()}</a>
+      </section>
+    )}
+  </main>
+</Base>
+
+<script>
+  // Gallery views and variant-aware enquiry links. Without JS the first photo and a general enquiry still work.
+  const main = document.querySelector<HTMLImageElement>('[data-main]')
+  const cap = document.querySelector<HTMLElement>('[data-cap]')
+  for (const t of document.querySelectorAll<HTMLButtonElement>('.pdp-thumb')) {
+    t.addEventListener('click', () => {
+      if (!main) return
+      main.src = t.dataset.src!; main.width = +t.dataset.w!; main.height = +t.dataset.h!
+      main.alt = main.alt.replace(/: .*$/, `: ${t.dataset.view}`)
+      if (cap) cap.textContent = cap.textContent!.replace(/ · .*$/, ` · ${t.dataset.view}`)
+      for (const o of document.querySelectorAll('.pdp-thumb')) o.setAttribute('aria-pressed', String(o === t))
+    })
+  }
+  // arrow keys move between views, as in an image viewer
+  document.querySelector('.pdp-thumbs')?.addEventListener('keydown', (e) => {
+    const k = (e as KeyboardEvent).key
+    if (k !== 'ArrowRight' && k !== 'ArrowLeft') return
+    const all = [...document.querySelectorAll<HTMLButtonElement>('.pdp-thumb')]
+    const i = all.indexOf(document.activeElement as HTMLButtonElement)
+    if (i < 0) return
+    e.preventDefault()
+    const next = all[(i + (k === 'ArrowRight' ? 1 : -1) + all.length) % all.length]
+    next.focus(); next.click()
+  })
+  const form = document.querySelector<HTMLFormElement>('[data-variant]')
+  if (form) {
+    const combos: [string, string][] = JSON.parse(form.querySelector('[data-combos]')!.textContent || '[]')
+    const fin = form.querySelector<HTMLSelectElement>('[data-finish]')
+    const size = form.querySelector<HTMLSelectElement>('[data-size]')
+    const note = form.querySelector<HTMLElement>('[data-note]')!
+    const wa = form.querySelector<HTMLAnchorElement>('[data-wa-link]')
+    const fl = form.querySelector<HTMLAnchorElement>('[data-form-link]')!
+    const summary = form.querySelector<HTMLElement>('[data-summary]')!
+    const update = () => {
+      const f = fin?.value || '', s = size?.value || ''
+      // sizes printed for the chosen finish stay enabled; others are marked so nobody asks for a combination the catalogue does not list
+      if (size) for (const o of size.options) if (o.value) o.disabled = !!f && !combos.some(([cf, cs]) => cf === f && cs === o.value)
+      if (size?.selectedOptions[0]?.disabled) size.value = ''
+      const item = [form.dataset.label, f, size?.value || ''].filter(Boolean).join(', ')
+      note.textContent = f && s && !combos.some(([cf, cs]) => cf === f && cs === s) ? 'This combination is not listed in the catalogue.' : ''
+      const text = `Hi Birdi Hardwares, I’m interested in ${item}. Please share availability and a quotation.`
+      if (wa) wa.href = `https://wa.me/${form.dataset.wa}?text=${encodeURIComponent(text)}`
+      fl.href = `/enquiry/?type=${encodeURIComponent(item)}`
+      summary.textContent = item
+    }
+    fin?.addEventListener('change', update)
+    size?.addEventListener('change', update)
+    form.addEventListener('submit', (e) => e.preventDefault())
+    update()
+  }
+</script>

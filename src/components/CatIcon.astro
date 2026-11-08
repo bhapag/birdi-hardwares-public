@@ -1,0 +1,10 @@
+---
+// Plain line drawings for categories that have no catalogue photos yet. Deliberately schematic, never a product.
+interface Props { name: 'chimney' | 'safe' | 'kitchen' }
+const { name } = Astro.props
+---
+<svg class="cat-icon" viewBox="0 0 120 90" role="img" aria-label={`Line drawing of a ${name === 'kitchen' ? 'kitchen basket' : name} (illustration)`} fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+  {name === 'chimney' && (<g><rect x="50" y="6" width="20" height="34" /><path d="M50 40 20 70h80L70 40" /><path d="M20 70h80v6H20z" /><path d="M36 76v8M84 76v8" opacity=".5" /></g>)}
+  {name === 'safe' && (<g><rect x="26" y="10" width="68" height="70" rx="3" /><rect x="34" y="18" width="52" height="54" rx="2" /><circle cx="60" cy="45" r="11" /><path d="M60 34v5M60 51v5M49 45h5M66 45h5" /><path d="M30 80v5M90 80v5" /></g>)}
+  {name === 'kitchen' && (<g><path d="M18 28h84v44H18z" /><path d="M26 36h68M26 46h68M26 56h68M26 66h68" opacity=".55" /><path d="M38 28v44M60 28v44M82 28v44" opacity=".55" /><path d="M12 28h6M102 28h6" /></g>)}
+</svg>

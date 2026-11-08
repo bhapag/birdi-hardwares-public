@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro'
+import PageStage from '../components/PageStage.astro'
+import { FAQ } from '../data/guides.js'
+import { abs } from '../lib/seo.js'
+// FAQPage markup describes the questions on the page; it makes no claim beyond them.
+const jsonld = [{ '@context': 'https://schema.org', '@type': 'FAQPage', url: abs('/faq/'), mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }]
+---
+<Base title="Questions" description="Questions about prices, availability, brands, replacement parts and visiting Birdi Hardwares in Lakkar Bazar, Ludhiana." path="/faq/" crumbs={[{ name: 'Questions', href: '/faq/' }]} jsonld={jsonld}>
+  <main>
+    <PageStage kicker="Help" title="Questions, answered plainly." lead="If your question is not here, ask it with the enquiry form or at the shop." actions={false} />
+    <section class="band faq">
+      {FAQ.map(([q, a]) => (
+        <details class="qa">
+          <summary>{q}</summary>
+          <p>{a}</p>
+        </details>
+      ))}
+      <div class="cta-row"><a class="btn btn-primary" href="/enquiry/">Ask a question</a><a class="link" href="/contact/">Visit the shop</a></div>
+    </section>
+  </main>
+</Base>

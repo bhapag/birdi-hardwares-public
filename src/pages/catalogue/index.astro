@@ -1,0 +1,135 @@
+---
+import Base from '../../layouts/Base.astro'
+import ShopGrid from '../../components/ShopGrid.astro'
+import { SHOP, PRODUCTS, BRANDS, inCat } from '../../data/shop.js'
+import { abs } from '../../lib/seo.js'
+const cats = SHOP.map((c) => {
+  const items = inCat(c.slug)
+  return { ...c, n: items.length, img: items.find((p) => p.images.length)?.images[0] }
+})
+const jsonld = [{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Product catalogue', url: abs('/catalogue/'), isPartOf: { '@id': abs('/#store') },
+  mainEntity: { '@type': 'ItemList', itemListElement: cats.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.title, url: abs(`/catalogue/${c.slug}/`) })) } }]
+---
+<Base title="Product catalogue" description={`${PRODUCTS.length} cabinet handles, knobs, pull handles, wardrobe fittings and more from the FANCY and ROOT catalogues at Birdi Hardwares, Ludhiana. Price on request.`}
+  path="/catalogue/" crumbs={[{ name: 'Catalogue', href: '/catalogue/' }]} jsonld={jsonld}>
+  <main id="main" class="cat-index">
+    <header class="cat-head">
+      <p class="kicker">Catalogue</p>
+      <h1>Find the part, then ask for a price.</h1>
+      <p class="stage-lead">{PRODUCTS.length} products from two manufacturers' catalogues, by model code, finish and size. Every item is price on request.</p>
+      <form class="cat-search" role="search" data-search action="/catalogue/" onsubmit="return false">
+        <label class="field cat-q">
+          <span class="field-label">Search by name, model code, finish or brand</span>
+          <input type="search" name="q" placeholder="e.g. 1404, rose gold, trouser rack" autocomplete="off" enterkeyhint="search" data-q />
+        </label>
+        <label class="field">
+          <span class="field-label">Category</span>
+          <select name="k" data-k><option value="">All categories</option>{cats.filter((c) => c.n).map((c) => <option value={c.slug}>{c.title}</option>)}</select>
+        </label>
+        <label class="field">
+          <span class="field-label">Brand</span>
+          <select name="b" data-b><option value="">All brands</option>{Object.keys(BRANDS).map((b) => <option value={b}>{b}</option>)}</select>
+        </label>
+      </form>
+      <div class="active-filters" data-active hidden>
+        <ul data-chips aria-label="Active filters"></ul>
+        <button type="button" class="link" data-clear>Clear all</button>
+      </div>
+      <div class="search-out" data-out hidden>
+        <p class="result-count" aria-live="polite" data-count></p>
+        <div class="empty-state" data-empty hidden>
+          <p>Try a model code (for example 1404 or RG 3001), a finish such as antique or rose gold, or one of these:</p>
+          <ul>
+            <li><button type="button" class="chip-btn" data-try="antique">antique</button></li>
+            <li><button type="button" class="chip-btn" data-try="rose gold">rose gold</button></li>
+            <li><button type="button" class="chip-btn" data-try="trouser rack">trouser rack</button></li>
+            <li><button type="button" class="chip-btn" data-try="profile handle">profile handle</button></li>
+          </ul>
+          <p>Not in the catalogue? <a class="link" href="/enquiry/">Ask the shop</a> with a photo or the part's measurements.</p>
+        </div>
+        <ul class="prod-grid" data-results></ul>
+        <button type="button" class="btn btn-quiet" data-more hidden>Show more</button>
+      </div>
+    </header>
+
+    <section class="band" aria-labelledby="cats-h">
+      <h2 id="cats-h" class="band-title">Categories</h2>
+      <ShopGrid />
+    </section>
+
+    <section class="band band-shelf" aria-labelledby="brands-h">
+      <h2 id="brands-h" class="band-title">About these catalogues</h2>
+      <ul class="tick-list">
+        {Object.values(BRANDS).map((b) => <li><strong>{b.name}:</strong> {b.note}</li>)}
+      </ul>
+      <p class="fine">FANCY and ROOT are the manufacturers' own brands. Products, codes, finishes and sizes are shown as printed in their catalogues, with their catalogue photos. Birdi Hardwares confirms availability and price for each enquiry.</p>
+    </section>
+  </main>
+</Base>
+
+<script>
+  // Search over /catalogue/search.json, loaded the first time someone types or picks a filter.
+  type Row = { id: string; n: string; c: string; b: string; k: string; s: string; f: string; u: string; i: string | null; w: number; h: number; m: string; white: boolean }
+  const form = document.querySelector<HTMLFormElement>('[data-search]')!
+  const q = form.querySelector<HTMLInputElement>('[data-q]')!
+  const k = form.querySelector<HTMLSelectElement>('[data-k]')!
+  const b = form.querySelector<HTMLSelectElement>('[data-b]')!
+  const out = document.querySelector<HTMLElement>('[data-out]')!
+  const list = out.querySelector<HTMLUListElement>('[data-results]')!
+  const count = out.querySelector<HTMLElement>('[data-count]')!
+  const more = out.querySelector<HTMLButtonElement>('[data-more]')!
+  const empty = out.querySelector<HTMLElement>('[data-empty]')!
+  const active = document.querySelector<HTMLElement>('[data-active]')!
+  const chips = active.querySelector<HTMLUListElement>('[data-chips]')!
+  let rows: Row[] | null = null
+  let loading: Promise<Row[]> | null = null
+  let shown = 24
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const load = () => (loading ??= fetch('/catalogue/search.json').then((r) => r.json()).then((d) => (rows = d)))
+  const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!)
+  const card = (r: Row) => `<li class="prod-card"><a href="${r.u}" class="prod-link"><span class="prod-img${r.white ? ' on-white' : ''}">${r.i ? `<img src="${r.i}" alt="${esc(r.b + ' ' + r.n)}" width="${r.w}" height="${r.h}" loading="lazy" decoding="async">` : '<span class="prod-noimg">No photo</span>'}</span><span class="prod-body"><span class="prod-brand">${r.b} · ${esc(r.s)}</span><span class="prod-name">${esc(r.n)}</span><span class="prod-meta">${esc(r.m)}</span><span class="prod-cta">View options <span aria-hidden="true">→</span></span></span></a></li>`
+  // the filters in use, each removable on its own
+  function showChips() {
+    const items: [string, () => void][] = []
+    if (q.value.trim()) items.push([`“${q.value.trim()}”`, () => { q.value = '' }])
+    if (k.value) items.push([k.selectedOptions[0].text, () => { k.value = '' }])
+    if (b.value) items.push([b.value, () => { b.value = '' }])
+    chips.replaceChildren(...items.map(([label, clear]) => {
+      const li = document.createElement('li')
+      const btn = document.createElement('button')
+      btn.type = 'button'; btn.className = 'chip-btn chip-on'
+      btn.innerHTML = `${esc(label)} <span aria-hidden="true">×</span><span class="sr-only"> (remove filter)</span>`
+      btn.addEventListener('click', () => { clear(); run(); q.focus() })
+      li.append(btn); return li
+    }))
+    active.hidden = !items.length
+  }
+  async function run(reset = true) {
+    const terms = norm(q.value).split(' ').filter(Boolean)
+    showChips()
+    if (!terms.length && !k.value && !b.value) { out.hidden = true; return }
+    const data = rows ?? (await load())
+    if (reset) shown = 24
+    const hits = data.filter((r) => (!k.value || r.k === k.value) && (!b.value || r.b === b.value) &&
+      terms.every((t) => norm(`${r.n} ${r.c} ${r.b} ${r.s} ${r.k} ${r.f}`).includes(t) || norm(r.c).replace(/ /g, '').includes(t)))
+    out.hidden = false
+    count.textContent = hits.length ? `${hits.length} product${hits.length > 1 ? 's' : ''}` : 'No products match.'
+    empty.hidden = hits.length > 0
+    list.innerHTML = hits.slice(0, shown).map(card).join('')
+    more.hidden = hits.length <= shown
+  }
+  let t = 0
+  q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(run, 120) })
+  q.addEventListener('focus', load, { once: true })
+  k.addEventListener('change', () => run())
+  b.addEventListener('change', () => run())
+  more.addEventListener('click', () => { shown += 48; run(false) })
+  active.querySelector('[data-clear]')!.addEventListener('click', () => { q.value = ''; k.value = ''; b.value = ''; run(); q.focus() })
+  empty.addEventListener('click', (e) => { const t = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-try]'); if (t) { q.value = t.dataset.try!; k.value = ''; b.value = ''; run() } })
+  // the home page search and shared links arrive with ?q= (and optionally ?k= / ?b=)
+  const init = new URLSearchParams(location.search)
+  if (init.get('k') && [...k.options].some((o) => o.value === init.get('k'))) k.value = init.get('k')!
+  if (init.get('b') && [...b.options].some((o) => o.value === init.get('b'))) b.value = init.get('b')!
+  if (init.get('q')) q.value = init.get('q')!
+  if (q.value || k.value || b.value) run()
+</script>

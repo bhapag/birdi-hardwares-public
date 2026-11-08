@@ -1,0 +1,24 @@
+---
+// One catalogue product: catalogue photo on a consistent rounded frame, brand and type, name, model code and how
+// many finishes and sizes it comes in. The whole card is one link to the product page. Plain HTML, no script.
+interface Props { p: any; eager?: boolean }
+const { p, eager = false } = Astro.props
+const img = p.images[0]
+const white = p.brand === 'ROOT' && !img?.view?.startsWith('in a wardrobe')
+const meta = [p.finishes.length ? `${p.finishes.length} finish${p.finishes.length > 1 ? 'es' : ''}` : '', p.sizes.length ? `${p.sizes.length} size${p.sizes.length > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ')
+---
+<li class="prod-card" data-brand={p.brand} data-sub={p.subcategory}>
+  <a href={p.url} class="prod-link">
+    <span class={`prod-img${white ? ' on-white' : ''}`}>
+      {img
+        ? <img src={img.thumb || img.src} alt={`${p.brand} ${p.name}`} width={img.w} height={img.h} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+        : <span class="prod-noimg">No photo in the catalogue</span>}
+    </span>
+    <span class="prod-body">
+      <span class="prod-brand">{p.brand}{p.series ? ` · ${p.series.join(' / ')}` : ''}</span>
+      <span class="prod-name">{p.name}</span>
+      <span class="prod-meta">{meta}{meta && p.code ? ' · ' : ''}{p.code ? `Model ${p.code}` : ''}</span>
+      <span class="prod-cta">View options <span aria-hidden="true">→</span></span>
+    </span>
+  </a>
+</li>

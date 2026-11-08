@@ -1,0 +1,27 @@
+---
+import SectionHeading from './SectionHeading.jsx'
+import ShowcasePlate from './ShowcasePlate.jsx'
+
+interface Item { id: string; title: string; text: string; image?: string; alt?: string }
+const { items } = Astro.props as { items: Item[] }
+---
+
+<section id="range" class="showcase" aria-labelledby="range-h">
+  <div class="showcase-head">
+    <div id="range-h"><SectionHeading client:idle text="Start with what’s on the door." /></div>
+    <p class="showcase-lede">A starting selection. Ask about any of these, or <a href="/range/">see the whole range</a>.</p>
+    <p class="illustrative">Images are illustrations of each category, not photographs of Birdi’s stock.</p>
+  </div>
+  <div class="showcase-grid">
+    {items.map((it, n) => (
+      <article class={`show show-${n + 1}`}>
+        <ShowcasePlate client:idle image={it.image} alt={it.alt} />
+        <div class="show-body">
+          <h3>{it.title}</h3>
+          <p>{it.text}</p>
+          <button class="btn btn-quiet" data-enquire={it.title}>Enquire about {it.title.toLowerCase()}</button>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>

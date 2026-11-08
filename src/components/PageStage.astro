@@ -1,0 +1,31 @@
+---
+// Dimensional page header: warm wall, window light (React Bits LightRays), a tilting product plate, and the
+// page heading in the first paint. Used by every inner page.
+import Rays from './Rays.jsx'
+import ShowcasePlate from './ShowcasePlate.jsx'
+import { IMAGES } from '../data/catalogue.js'
+import ContactActions from './ContactActions.astro'
+interface Props { kicker?: string; title: string; lead?: string; image?: string; actions?: boolean; enquire?: string }
+const { kicker, title, lead, image, actions = true, enquire = '' } = Astro.props
+const img = image ? IMAGES[image] : null
+---
+<section class={`stage-head${img ? '' : ' no-plate'}`} id="main">
+  <div class="stage-wall" aria-hidden="true"><Rays client:idle /></div>
+  <div class="stage-copy">
+    {kicker && <p class="kicker">{kicker}</p>}
+    <h1 class="rise-soft">{title}</h1>
+    {lead && <p class="stage-lead">{lead}</p>}
+    {actions && (
+      <div class="stage-actions">
+        <ContactActions item={enquire || null} form={`/enquiry/${enquire ? `?category=${encodeURIComponent(enquire)}` : ''}`} />
+        <slot name="actions" />
+      </div>
+    )}
+    <slot />
+  </div>
+  {img && (
+    <div class="stage-plate">
+      <ShowcasePlate client:idle image={img.src} alt={img.alt} label={img.kind === 'render' ? '3D render' : 'Illustrative'} eager sizes="(max-width: 860px) 80vw, 34vw" />
+    </div>
+  )}
+</section>

@@ -1,0 +1,155 @@
+---
+import Base from '../../../layouts/Base.astro'
+import ProductCard from '../../../components/ProductCard.astro'
+import ContactActions from '../../../components/ContactActions.astro'
+import CatIcon from '../../../components/CatIcon.astro'
+import { SHOP, inCat, subSlug } from '../../../data/shop.js'
+import { abs } from '../../../lib/seo.js'
+
+export function getStaticPaths() {
+  return SHOP.map((c) => ({ params: { cat: c.slug }, props: { c } }))
+}
+const { c } = Astro.props
+const path = `/catalogue/${c.slug}/`
+const items = inCat(c.slug)
+const subs = [...new Set(items.map((p) => p.subcategory))]
+const brands = [...new Set(items.map((p) => p.brand))]
+const groups = subs.map((s) => ({ s, items: items.filter((p) => p.subcategory === s) }))
+const jsonld = [{
+  '@context': 'https://schema.org', '@type': 'CollectionPage', name: c.title, url: abs(path), description: c.short, isPartOf: { '@id': abs('/#store') },
+  ...(items.length ? { mainEntity: { '@type': 'ItemList', numberOfItems: items.length, itemListElement: items.map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: `${p.brand} ${p.name}`, url: abs(p.url) })) } } : {}),
+}]
+---
+<Base title={`${c.title} in Ludhiana`} description={`${c.short} At Birdi Hardwares, Lakkar Bazar, Ludhiana. Price on request.`} path={path}
+  crumbs={[{ name: 'Catalogue', href: '/catalogue/' }, { name: c.title, href: path }]} jsonld={jsonld}>
+  <main>
+    <header class="cat-head" id="main">
+      <p class="kicker">{items.length ? `${items.length} products · ${brands.join(' and ')}` : 'Ask the shop'}</p>
+      <h1>{c.title}</h1>
+      <p class="stage-lead">{c.intro}</p>
+      <p class="stage-note">Price on request · Ask about availability</p>
+      {!items.length && <ContactActions item={c.title.toLowerCase()} form={`/enquiry/?type=${encodeURIComponent(c.title)}`} />}
+    </header>
+
+    {items.length > 0 && (
+      <section class="band cat-band" aria-label={`${c.title} products`}>
+        {(subs.length > 1 || brands.length > 1) && (
+          <div class="cat-filters" data-filters>
+            {subs.length > 1 && (
+              <div class="filter-row" role="group" aria-label="Type">
+                <button type="button" class="chip-btn" data-sub="" aria-pressed="true">All {items.length}</button>
+                {groups.map((g) => <button type="button" class="chip-btn" data-sub={subSlug(g.s)} aria-pressed="false">{g.s} <span class="chip-n">{g.items.length}</span></button>)}
+              </div>
+            )}
+            {brands.length > 1 && (
+              <div class="filter-row" role="group" aria-label="Brand">
+                <button type="button" class="chip-btn" data-brand="" aria-pressed="true">All brands</button>
+                {brands.map((b) => <button type="button" class="chip-btn" data-brand={b} aria-pressed="false">{b}</button>)}
+              </div>
+            )}
+            <div class="filter-status">
+              <p class="result-count" aria-live="polite" data-count>Showing {items.length} of {items.length}</p>
+              <button type="button" class="link" data-reset hidden>Clear filters</button>
+            </div>
+          </div>
+        )}
+        {groups.map((g, gi) => (
+          <section class="sub-group" data-group={subSlug(g.s)} aria-labelledby={`g-${subSlug(g.s)}`}>
+            <h2 class="sub-title" id={`g-${subSlug(g.s)}`}>{g.s} <span class="chip-n">{g.items.length}</span></h2>
+            <ul class="prod-grid">
+              {g.items.map((p, i) => <ProductCard p={p} eager={gi === 0 && i < 4} />)}
+            </ul>
+          </section>
+        ))}
+        <p class="fine">Photos are the manufacturers' catalogue photos. Finishes and sizes are as printed in the catalogue; the shop confirms what is available and the price.</p>
+      </section>
+    )}
+
+    {c.guide && (
+      <section class="band choose" id="choosing" aria-labelledby="choosing-h">
+        <h2 id="choosing-h" class="band-title">Choosing {c.title.toLowerCase()}</h2>
+        <div class="qa-grid">
+          {c.guide.map((g) => (
+            <div class="qa-item">
+              <h3>{g.q}</h3>
+              <p>{g.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {c.related && (
+      <section class="band" aria-labelledby="rel-h">
+        <h2 id="rel-h" class="band-title">Also for kitchens</h2>
+        <ul class="link-cards">{c.related.map((r) => <li><a href={r.href}><span>{r.label}</span><small>From the cabinet handles catalogue</small></a></li>)}</ul>
+      </section>
+    )}
+
+    {c.missing && (
+      <section class="band split">
+        <div>
+          {c.icon && <CatIcon name={c.icon} />}
+          <h2 class="band-title">Not in the catalogues yet</h2>
+          <ul class="tick-list">{c.missing.map((m) => <li>{m}</li>)}</ul>
+          <p class="fine">Nothing is listed here until the shop provides real product details. The drawing above is a simple illustration, not a product.</p>
+        </div>
+        <div class="split-aside">
+          <div class="ask-panel">
+            <h2>Ask about {c.title.toLowerCase()}</h2>
+            <p>Send these details and ask what the shop can supply:</p>
+            <ul class="tick-list">{c.bring.map((b) => <li>{b}</li>)}</ul>
+            <ContactActions item={c.title.toLowerCase()} form={`/enquiry/?type=${encodeURIComponent(c.title)}`} invert />
+          </div>
+        </div>
+      </section>
+    )}
+  </main>
+</Base>
+
+<script>
+  // Type and brand filters over the full, crawlable list. The bar is in the first paint (no shift when this runs).
+  const box = document.querySelector<HTMLElement>('[data-filters]')
+  if (box) {
+    const cards = [...document.querySelectorAll<HTMLElement>('.prod-card')]
+    const groups = [...document.querySelectorAll<HTMLElement>('.sub-group')]
+    const count = box.querySelector<HTMLElement>('[data-count]')!
+    const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const state = { sub: new URLSearchParams(location.search).get('sub') || '', brand: '' }
+    // an unknown ?sub= (old or mistyped link) shows everything rather than an empty page
+    if (![...box.querySelectorAll<HTMLButtonElement>('[data-sub]')].some((b) => b.dataset.sub === state.sub)) state.sub = ''
+    const apply = () => {
+      let n = 0
+      for (const c of cards) {
+        const show = (!state.sub || slug(c.dataset.sub!) === state.sub) && (!state.brand || c.dataset.brand === state.brand)
+        c.hidden = !show
+        if (show) n++
+      }
+      for (const g of groups) g.hidden = !g.querySelector('.prod-card:not([hidden])')
+      for (const b of box.querySelectorAll<HTMLButtonElement>('[data-sub]')) b.setAttribute('aria-pressed', String(b.dataset.sub === state.sub))
+      for (const b of box.querySelectorAll<HTMLButtonElement>('[data-brand]')) b.setAttribute('aria-pressed', String(b.dataset.brand === state.brand))
+      count.textContent = `Showing ${n} of ${cards.length}`
+      reset.hidden = !state.sub && !state.brand
+    }
+    const reset = box.querySelector<HTMLButtonElement>('[data-reset]')!
+    box.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest('button')
+      if (!b) return
+      if (b.dataset.sub !== undefined) {
+        state.sub = b.dataset.sub
+        const u = new URL(location.href)
+        state.sub ? u.searchParams.set('sub', state.sub) : u.searchParams.delete('sub')
+        history.replaceState(null, '', u)
+      }
+      if (b.dataset.brand !== undefined) state.brand = b.dataset.brand
+      if (b === reset) {
+        state.sub = state.brand = ''
+        const u = new URL(location.href)
+        u.searchParams.delete('sub')
+        history.replaceState(null, '', u)
+      }
+      apply()
+    })
+    apply()
+  }
+</script>

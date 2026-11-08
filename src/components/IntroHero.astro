@@ -1,0 +1,91 @@
+---
+// First screen of the home page: a warm showroom composition. Left: who and where, a catalogue search and the two
+// ways forward (browse or ask). Right: the lever clip on a rounded stage, with small cards that show real catalogue
+// photographs and how enquiries work. Below: every range as a tab, with its product count.
+// Plain HTML: it works before (and without) any JavaScript; the 3D door story follows further down.
+import { SHOP, PRODUCTS, inCat } from '../data/shop.js'
+import { site } from '../data/site.js'
+import { waHref, telHref } from '../lib/contact.js'
+const wa = waHref(null)
+const ranges = SHOP.filter((c) => inCat(c.slug).length).length
+const peek = ['fancy-rg-735', 'fancy-1404', 'root-leather-drawer-with-password'].map((id) => PRODUCTS.find((p) => p.id === id)).filter(Boolean)
+---
+<section class="intro" aria-labelledby="intro-h">
+  <div class="intro-copy">
+    <p class="kicker intro-tag">Lakkar Bazar, Ludhiana</p>
+    <h1 id="intro-h">Hardware for doors, <span class="h1-soft">cabinets and wardrobes.</span></h1>
+    <p class="intro-lede">Cabinet handles, knobs, pull handles, wardrobe fittings, locks and door hardware from Birdi Hardwares in Lakkar Bazar. Browse the catalogue, then ask about availability and price.</p>
+    <form class="intro-search" action="/catalogue/" method="get" role="search" aria-label="Search the catalogue">
+      <label class="sr-only" for="intro-q">Search the catalogue by name, model code, finish or brand</label>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" fill="currentColor"/></svg>
+      <input id="intro-q" name="q" type="search" placeholder="Try 1404, rose gold or trouser rack" autocomplete="off" enterkeyhint="search" />
+      <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+    <div class="intro-actions">
+      <a class="btn btn-primary" href="/catalogue/">Browse the catalogue</a>
+      {wa && <a class="btn btn-quiet btn-wa-quiet" href={wa} target="_blank" rel="noopener">Ask on WhatsApp<span class="sr-only"> (opens in a new tab)</span></a>}
+      {telHref && <a class="link" href={telHref}>Call {site.phone.display}</a>}
+    </div>
+    <ul class="intro-facts" aria-label="At a glance">
+      <li><strong>{PRODUCTS.length}</strong> products</li>
+      <li><strong>{ranges}</strong> ranges</li>
+      <li>Price on request</li>
+    </ul>
+  </div>
+  <figure class="intro-media">
+    <div class="intro-frame">
+      <img class="intro-poster" src="/media/hero-lever-poster.webp" alt="A brushed brass lever handle on a round rose, mounted on a walnut sample block, with a key on travertine." width="848" height="1072" fetchpriority="high" decoding="async" />
+      <button type="button" class="media-btn intro-toggle" aria-label="Pause the lever animation" hidden>
+        <svg class="i-pause" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5h3v14H8zM13 5h3v14h-3z" fill="currentColor"/></svg>
+        <svg class="i-play" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+      </button>
+      <video class="intro-video" muted loop playsinline preload="none" poster="/media/hero-lever-poster.webp" width="848" height="1072" aria-hidden="true" data-webm="/media/hero-lever.webm" data-mp4="/media/hero-lever.mp4"></video>
+    </div>
+    <div class="intro-card intro-card-peek">
+      <p class="intro-card-k">From the catalogue</p>
+      <ul>
+        {peek.map((p) => (
+          <li><a href={p.url} title={p.name}><img src={p.images[0].src} alt={`${p.brand} ${p.name}`} width={p.images[0].w} height={p.images[0].h} loading="lazy" decoding="async" /></a></li>
+        ))}
+      </ul>
+    </div>
+    <div class="intro-card intro-card-ask">
+      <p class="intro-card-k">Ask, don't guess</p>
+      <p>Pick a finish and size; WhatsApp opens with them filled in.</p>
+    </div>
+    <figcaption>Illustrative image and motion, generated with Higgsfield. Not a photograph of Birdi’s stock.</figcaption>
+  </figure>
+  <nav class="intro-cats" aria-label="Categories">
+    <ul>{SHOP.map((c) => <li><a href={`/catalogue/${c.slug}/`}>{c.title}{inCat(c.slug).length > 0 && <span class="chip-n">{inCat(c.slug).length}</span>}</a></li>)}</ul>
+  </nav>
+</section>
+
+<script>
+  // Starts the clip only when it can actually play: not with reduced motion or data saving, only while on screen
+  // and the tab is visible. Any failure (format, network, autoplay refusal) leaves the sharp poster in place.
+  const v = document.querySelector<HTMLVideoElement>('.intro-video')
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const save = (navigator as any).connection?.saveData
+  if (v && !reduce && !save) {
+    let loaded = false, onScreen = false, pageLoaded = document.readyState === 'complete', userPaused = false
+    // looping motion longer than 5 s needs a pause control (WCAG 2.2.2)
+    const btn = document.querySelector<HTMLButtonElement>('.intro-toggle')!
+    const label = () => { btn.setAttribute('aria-label', `${v.paused ? 'Play' : 'Pause'} the lever animation`); btn.dataset.state = v.paused ? 'paused' : 'playing' }
+    v.addEventListener('play', label); v.addEventListener('pause', label)
+    btn.addEventListener('click', () => { userPaused = !v.paused; if (userPaused) v.pause(); else v.play().catch(() => {}) })
+    // the smaller rendition only where the frame is too small to show the full one's detail
+    const small = v.clientWidth * (devicePixelRatio || 1) <= 700
+    const src = (v.canPlayType('video/webm; codecs="vp9"') ? v.dataset.webm! : v.dataset.mp4!).replace('.', small ? '-600.' : '.')
+    const sync = () => {
+      // the poster is the first paint: the clip waits for the page to finish loading so it never competes with it
+      if (onScreen && pageLoaded && !document.hidden && !userPaused) {
+        if (!loaded) { loaded = true; v.src = src; v.preload = 'auto' }
+        v.play().then(() => { v.classList.add('is-playing'); btn.hidden = false }, () => {})
+      } else if (!v.paused) v.pause()
+    }
+    v.addEventListener('error', () => { v.remove(); btn.remove() })
+    new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; sync() }, { threshold: 0.2 }).observe(v)
+    document.addEventListener('visibilitychange', sync)
+    if (!pageLoaded) addEventListener('load', () => setTimeout(() => { pageLoaded = true; sync() }, 300), { once: true })
+  }
+</script>

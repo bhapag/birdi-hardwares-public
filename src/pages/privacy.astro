@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro'
+import PageStage from '../components/PageStage.astro'
+---
+<Base title="Privacy notice" description="How the Birdi Hardwares website handles information: no tracking or cookies; enquiries go through WhatsApp only when you send them." path="/privacy/" crumbs={[{ name: 'Privacy', href: '/privacy/' }]}>
+  <main>
+    <PageStage kicker="Privacy" title="Privacy notice." lead="This website collects as little as possible." actions={false} />
+    <article class="band guide-body">
+      <section><h2>Enquiry forms and WhatsApp</h2><p>The enquiry forms do not send or store anything on this website. When you choose to continue, your browser opens WhatsApp with your message filled in; nothing reaches the shop unless you press send in WhatsApp. Messages you send there are handled by WhatsApp under its own terms and privacy policy, and by the shop.</p></section>
+      <section><h2>Cookies and tracking</h2><p>This website sets no cookies and uses no analytics, advertising or tracking scripts.</p></section>
+      <section><h2>Hosting</h2><p>The website is hosted on Cloudflare. Like any web host, Cloudflare processes technical request data, such as IP addresses, to deliver pages and keep the service secure, under its own privacy policy.</p></section>
+      <section><h2>External links</h2><p>The visit page links to a map search, and contact buttons open WhatsApp or your phone's dialler. Those services' own privacy terms apply.</p></section>
+      <section><h2>Questions</h2><p>Call or WhatsApp the shop on +91 62845 05353.</p></section>
+    </article>
+  </main>
+</Base>

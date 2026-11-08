@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro'
+import PageStage from '../components/PageStage.astro'
+import FilmPlayer from '../components/FilmPlayer.jsx'
+import CategoryCard from '../components/CategoryCard.astro'
+import { CATEGORIES } from '../data/catalogue.js'
+import { site } from '../data/site.js'
+---
+<Base title="About Birdi Hardwares" description="Birdi Hardwares is a door hardware shop in Lakkar Bazar, Ludhiana: locks, digital locks, door closers, fittings and spare parts." path="/about/" crumbs={[{ name: 'About', href: '/about/' }]}>
+  <main>
+    <PageStage kicker="About" title="A hardware shop in Lakkar Bazar." lead="Birdi Hardwares deals in the hardware that makes a door work: locks, digital locks, door closers, hinges, handles, bolts and spare parts." image="door-fittings" />
+    <section class="band split">
+      <div class="prose">
+        <h2 class="band-title">What you will find here</h2>
+        <p>The shop's public listing groups its range as door fittings, hardware spare parts, safety door locks, digital door locks and door closers. This website follows the same groups, with hinges, handles and bolts given pages of their own.</p>
+        <p>Instead of a product list with prices, each category explains the types of hardware to ask about and the measurements that decide what fits. Availability and price are confirmed by the shop.</p>
+      </div>
+      <div class="prose">
+        <h2 class="band-title">About this website</h2>
+        <p>The phone and WhatsApp number on this website are confirmed by the shop. Anything not yet confirmed, such as opening hours, is left out rather than guessed.</p>
+        <p>The 3D scenes, renders and films are original work made for this website, and the illustrations are labelled as illustrations. Catalogue photos are the manufacturers' own.</p>
+      </div>
+    </section>
+    <section class="band band-dark" aria-labelledby="film-h">
+      <h2 id="film-h" class="band-title">Inside the showroom</h2>
+      <p class="band-lead">A 26-second 3D film: the lever, the latch, and a walk past the main kinds of hardware.</p>
+      <FilmPlayer client:visible base="/media/showroom-film" poster="/media/showroom-film-poster.jpg" title="Showroom film: a brass lever is pressed, the door opens, and the camera passes mechanical locks, digital locks, door closers, hinges and bolts before ending on the Birdi Hardwares name" duration={26.5} />
+    </section>
+    <section class="band" aria-labelledby="cats-h">
+      <h2 id="cats-h" class="band-title">Browse the range</h2>
+      <div class="cat-grid">{CATEGORIES.slice(0, 4).map((c) => <CategoryCard slug={c.slug} title={c.title} short={c.short} href={`/range/${c.slug}/`} />)}</div>
+      <div class="cta-row"><a class="btn btn-primary" href="/range/">See all eight categories</a><a class="link" href="/contact/">Visit the shop</a></div>
+    </section>
+  </main>
+</Base>

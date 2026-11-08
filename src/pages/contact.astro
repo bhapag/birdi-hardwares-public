@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro'
+import PageStage from '../components/PageStage.astro'
+import { site } from '../data/site.js'
+import { waHref, telHref } from '../lib/contact.js'
+const wa = waHref(null)
+const query = encodeURIComponent(`${site.name}, ${site.address.join(' ')}`)
+---
+<Base title="Visit the shop" description="Visit Birdi Hardwares near JMD Mall, Main Road, Lakkar Bazar, Ludhiana 141008 (Shop No. B-VII-871). Call or WhatsApp +91 62845 05353." path="/contact/" crumbs={[{ name: 'Visit', href: '/contact/' }]}>
+  <main>
+    <PageStage kicker="Visit" title="Find us in Lakkar Bazar." lead="See the hardware in person, bring your measurements, and ask about availability and price." actions={false} />
+    <section class="band split">
+      <div class="visit-card">
+        <h2>Address</h2>
+        <address>{site.name}<br />{site.address[0]}<br />{site.address[1]}</address>
+        <p class="fine">Address from public business listings.</p>
+        <a class="btn btn-quiet" href={`https://www.google.com/maps/search/?api=1&query=${query}`} rel="noopener" target="_blank">Search this address in Maps<span class="sr-only"> (opens in a new tab)</span></a>
+        <h2>Phone and WhatsApp</h2>
+        <p class="big-phone"><a href={telHref}>{site.phone.display}</a></p>
+        <div class="contact-actions">
+          <a class="btn btn-primary" href={telHref}>Call the shop</a>
+          <a class="btn btn-quiet" href={wa} target="_blank" rel="noopener">WhatsApp<span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+        <p class="fine">WhatsApp opens with a short message for you to check and send. Opening hours are not listed yet: call to check before a special trip.</p>
+      </div>
+      <div class="visit-card">
+        <h2>What to bring</h2>
+        <ul class="tick-list">
+          <li>The old part, if you are replacing one.</li>
+          <li>Photos of the door and the fitting, with a ruler beside it.</li>
+          <li>Door thickness, and the backset of any lock.</li>
+          <li>For a closer: door width and approximate weight.</li>
+        </ul>
+        <a class="link" href="/guides/door-measurements-checklist/">Full measurements checklist</a>
+        <h2>Prefer to ask first?</h2>
+        <p>Use the quotation form to describe what you need, with sizes and finish. It opens in WhatsApp for you to send.</p>
+        <a class="btn btn-primary" href="/enquiry/">Request a quotation</a>
+      </div>
+    </section>
+  </main>
+</Base>

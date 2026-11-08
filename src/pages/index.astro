@@ -1,0 +1,83 @@
+---
+import Base from '../layouts/Base.astro'
+import Hero from '../components/Hero.jsx'
+import IntroHero from '../components/IntroHero.astro'
+import Showcase from '../components/Showcase.astro'
+import CategoryTicker from '../components/CategoryTicker.jsx'
+import VideoLoop from '../components/VideoLoop.jsx'
+import FilmPlayer from '../components/FilmPlayer.jsx'
+import CategoryCard from '../components/CategoryCard.astro'
+import GradientText from '../components/vendor/GradientText.jsx'
+import { CATEGORIES, NEEDS, IMAGES } from '../data/catalogue.js'
+import { GUIDES } from '../data/guides.js'
+import { site } from '../data/site.js'
+import ContactActions from '../components/ContactActions.astro'
+import ShopGrid from '../components/ShopGrid.astro'
+import { PRODUCTS } from '../data/shop.js'
+
+const items = CATEGORIES.slice(0, 4).map((c) => ({ id: c.slug, title: c.title, text: c.short, image: IMAGES[c.slug].src, alt: IMAGES[c.slug].alt }))
+---
+<Base title="Birdi Hardwares, Ludhiana: door, cabinet and wardrobe hardware" description="Cabinet handles, knobs, pull handles, wardrobe fittings, locks and door hardware at Birdi Hardwares, Lakkar Bazar, Ludhiana. Browse and ask for a quotation." path="/" main="top">
+  <main id="top">
+    <IntroHero />
+    <section class="band" aria-labelledby="shop-h">
+      <h2 id="shop-h" class="band-title">Browse the catalogue</h2>
+      <p class="band-lead">{PRODUCTS.length} products from the FANCY and ROOT catalogues, by model, finish and size. Price on request.</p>
+      <ShopGrid eager={0} bento />
+      <div class="cta-row"><a class="btn btn-primary" href="/catalogue/">Search the catalogue</a></div>
+    </section>
+    {/* the 3D door story loads once the page is idle, while the visitor reads the first screen */}
+    <Hero client:idle />
+    <div class="ticker" aria-hidden="true"><CategoryTicker client:idle /></div>
+
+    <section class="showroom" aria-labelledby="showroom-h">
+      <VideoLoop client:visible base="/media/showroom-loop" poster="/media/showroom-loop-poster.jpg" posterPortrait="/media/showroom-loop-poster-portrait.jpg" label="background film" />
+      <div class="showroom-copy">
+        <p class="kicker">The showroom</p>
+        <h2 id="showroom-h">Hardware you can <GradientText client:idle colors={['#8a6a3d', '#c9a46a', '#8a6a3d']} animationSpeed={14} className="brass-text">see and hold</GradientText>.</h2>
+        <p>Locks, handles, hinges and fittings in brass, nickel and bronze. Browse by category, by door, or search for the part you need.</p>
+        <div class="cta-row"><a class="btn btn-primary" href="/range/">Explore the range</a><a class="link" href="/range/#search">Search for a part</a></div>
+      </div>
+    </section>
+
+    <Showcase items={items} />
+
+    <section class="band" aria-labelledby="more-h">
+      <h2 id="more-h" class="band-title">And everything around them</h2>
+      <div class="cat-grid">{CATEGORIES.slice(4).map((c) => <CategoryCard slug={c.slug} title={c.title} short={c.short} href={`/range/${c.slug}/`} />)}</div>
+    </section>
+
+    <section class="band band-dark" aria-labelledby="film-h">
+      <h2 id="film-h" class="band-title">Inside the showroom</h2>
+      <p class="band-lead">A short 3D film: press the lever, open the door, and walk past the main kinds of hardware.</p>
+      <FilmPlayer client:visible base="/media/showroom-film" poster="/media/showroom-film-poster.jpg" title="Showroom film: a brass lever is pressed, the door opens, and the camera passes mechanical locks, digital locks, door closers, hinges and bolts before ending on the Birdi Hardwares name" duration={26.5} />
+    </section>
+
+    <section class="band" aria-labelledby="needs-h">
+      <h2 id="needs-h" class="band-title">Start from your door</h2>
+      <ul class="need-grid">
+        {NEEDS.map((n) => (
+          <li><a href={`/needs/${n.slug}/`}><span class="need-title">{n.title}</span><span class="need-short">{n.short}</span></a></li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="band band-shelf" aria-labelledby="guides-h">
+      <h2 id="guides-h" class="band-title">Before you buy</h2>
+      <ul class="link-cards">{GUIDES.slice(0, 3).map((g) => <li><a href={`/guides/${g.slug}/`}><span>{g.title}</span><small>{g.lead}</small></a></li>)}</ul>
+      <div class="cta-row"><a class="link" href="/guides/">All buying guides</a></div>
+    </section>
+
+    <section class="statement" aria-label="Birdi Hardwares">
+      <p class="tagline">Every entrance deserves the right hardware.</p>
+    </section>
+
+    <section class="band visit-band" id="visit" aria-labelledby="visit-h">
+      <div>
+        <h2 id="visit-h" class="band-title">Visit the shop</h2>
+        <address>{site.name}<br />{site.address[0]}<br />{site.address[1]}</address>
+      </div>
+      <ContactActions form="/enquiry/" />
+    </section>
+  </main>
+</Base>

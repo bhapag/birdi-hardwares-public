@@ -1,0 +1,33 @@
+---
+import Base from '../../layouts/Base.astro'
+import PageStage from '../../components/PageStage.astro'
+import CategoryCard from '../../components/CategoryCard.astro'
+import { NEEDS, categoryBySlug, IMAGES } from '../../data/catalogue.js'
+import { GUIDES } from '../../data/guides.js'
+export function getStaticPaths() { return NEEDS.map((n) => ({ params: { slug: n.slug }, props: { n } })) }
+const { n } = Astro.props
+const path = `/needs/${n.slug}/`
+const guides = n.guides.map((g) => GUIDES.find((x) => x.slug === g)).filter(Boolean)
+---
+<Base title={n.title} description={`${n.title}: ${n.short} Advice and quotation enquiries at Birdi Hardwares, Lakkar Bazar, Ludhiana.`} path={path} crumbs={[{ name: 'Range', href: '/range/' }, { name: n.title, href: path }]} image={`${IMAGES[n.image].src}-1200.jpg`}>
+  <main>
+    <PageStage kicker="Buyer needs" title={n.title} lead={n.lead} image={n.image} />
+    <section class="band" aria-labelledby="plan-h">
+      <h2 id="plan-h" class="band-title">Plan it as a set</h2>
+      <ol class="step-grid">
+        {n.points.map(([h, p], i) => <li><span class="step-n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><h3>{h}</h3><p>{p}</p></li>)}
+      </ol>
+    </section>
+    <section class="band band-shelf" aria-labelledby="cats-h">
+      <h2 id="cats-h" class="band-title">Where to look in the range</h2>
+      <div class="cat-grid">
+        {n.cats.map((s) => { const c = categoryBySlug[s]; return <CategoryCard slug={c.slug} title={c.title} short={c.short} href={`/range/${c.slug}/`} /> })}
+      </div>
+    </section>
+    <section class="band" aria-labelledby="g-h">
+      <h2 id="g-h" class="band-title">Read before you buy</h2>
+      <ul class="link-cards">{guides.map((g) => <li><a href={`/guides/${g.slug}/`}><span>{g.title}</span><small>{g.lead}</small></a></li>)}</ul>
+      <div class="cta-row"><a class="btn btn-primary" href="/enquiry/">Request a quotation</a><a class="link" href="/guides/door-measurements-checklist/">What to measure</a></div>
+    </section>
+  </main>
+</Base>

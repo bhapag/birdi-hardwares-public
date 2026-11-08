@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro'
+import PageStage from '../components/PageStage.astro'
+import EnquiryForm from '../components/EnquiryForm.jsx'
+import { CATEGORIES } from '../data/catalogue.js'
+import { site } from '../data/site.js'
+import { telHref } from '../lib/contact.js'
+---
+<Base title="Request a quotation" description="Ask Birdi Hardwares, Lakkar Bazar, Ludhiana, about availability and price for door locks, closers, hinges, handles, bolts and spare parts." path="/enquiry/" crumbs={[{ name: 'Request a quotation', href: '/enquiry/' }]}>
+  <main>
+    <PageStage kicker="Enquiry" title="Request a quotation." lead="Prices depend on the item, the finish and the quantity, so every item is price on request. Tell the shop what you need and how to reach you." actions={false} />
+    <section class="band form-band">
+      <EnquiryForm client:load categories={CATEGORIES.map((c) => c.title)} endpoint={site.enquiryEndpoint} />
+      <aside class="form-aside">
+        <h2>Measure first</h2>
+        <p>Door thickness and backset decide most lock and handle choices. Width and weight decide a closer.</p>
+        <a class="link" href="/guides/door-measurements-checklist/">Measurements checklist</a>
+        <h2>Prefer to talk?</h2>
+        <p><a class="link" href={telHref}>Call {site.phone.display}</a></p>
+        <h2>Or visit</h2>
+        <address>{site.address[0]}<br />{site.address[1]}</address>
+        <a class="link" href="/contact/">How to find the shop</a>
+      </aside>
+    </section>
+  </main>
+</Base>

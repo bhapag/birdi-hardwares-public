@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro'
+import PageStage from '../../components/PageStage.astro'
+import CategoryCard from '../../components/CategoryCard.astro'
+import { GUIDES } from '../../data/guides.js'
+import { categoryBySlug, IMAGES } from '../../data/catalogue.js'
+import { abs } from '../../lib/seo.js'
+export function getStaticPaths() { return GUIDES.map((g) => ({ params: { slug: g.slug }, props: { g } })) }
+const { g } = Astro.props
+const path = `/guides/${g.slug}/`
+const jsonld = [{ '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, url: abs(path), image: abs(`${IMAGES[g.image].src}-1200.jpg`), publisher: { '@id': abs('/#store') }, inLanguage: 'en-IN' }]
+const others = GUIDES.filter((x) => x.slug !== g.slug).slice(0, 3)
+---
+<Base title={g.title} description={g.description} path={path} crumbs={[{ name: 'Buying guides', href: '/guides/' }, { name: g.title, href: path }]} jsonld={jsonld} image={`${IMAGES[g.image].src}-1200.jpg`}>
+  <main>
+    <PageStage kicker="Buying guide" title={g.title} lead={g.lead} image={g.image} actions={false} />
+    <article class="band guide-body">
+      {g.sections.map((s) => (
+        <section>
+          <h2>{s.h}</h2>
+          {s.p?.map((p) => <p>{p}</p>)}
+          {s.list && <ul class="tick-list">{s.list.map((li) => <li>{li}</li>)}</ul>}
+          {s.table && (
+            <div class="table-wrap"><table>
+              <thead><tr>{s.table[0].map((h) => <th scope="col">{h}</th>)}</tr></thead>
+              <tbody>{s.table.slice(1).map((r) => <tr>{r.map((cell, i) => (i === 0 ? <th scope="row">{cell}</th> : <td>{cell}</td>))}</tr>)}</tbody>
+            </table></div>
+          )}
+          {s.after && <p>{s.after}</p>}
+        </section>
+      ))}
+      <p class="fine">General guidance only. Figures given as typical come from published manufacturer data and standards summaries; always check the specification of the item you buy.</p>
+    </article>
+    <section class="band band-shelf" aria-labelledby="cats-h">
+      <h2 id="cats-h" class="band-title">In the range</h2>
+      <div class="cat-grid three">{g.cats.slice(0, 3).map((s) => { const c = categoryBySlug[s]; return <CategoryCard slug={c.slug} title={c.title} short={c.short} href={`/range/${c.slug}/`} /> })}</div>
+      <div class="cta-row"><a class="btn btn-primary" href="/enquiry/">Request a quotation</a></div>
+    </section>
+    <section class="band" aria-labelledby="more-h">
+      <h2 id="more-h" class="band-title">More guides</h2>
+      <ul class="link-cards">{others.map((o) => <li><a href={`/guides/${o.slug}/`}><span>{o.title}</span><small>{o.lead}</small></a></li>)}</ul>
+    </section>
+  </main>
+</Base>

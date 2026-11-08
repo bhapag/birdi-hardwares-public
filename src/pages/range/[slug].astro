@@ -1,0 +1,87 @@
+---
+import Base from '../../layouts/Base.astro'
+import PageStage from '../../components/PageStage.astro'
+import CategoryCard from '../../components/CategoryCard.astro'
+import { CATEGORIES, APPLICATIONS, IMAGES } from '../../data/catalogue.js'
+import { GUIDES } from '../../data/guides.js'
+import { ask, slug as toId } from '../../lib/searchIndex.js'
+import { abs } from '../../lib/seo.js'
+import ContactActions from '../../components/ContactActions.astro'
+import { waHref } from '../../lib/contact.js'
+
+export function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { slug: c.slug }, props: { c } }))
+}
+const { c } = Astro.props
+const path = `/range/${c.slug}/`
+const guides = c.guides.map((g) => GUIDES.find((x) => x.slug === g)).filter(Boolean)
+const related = CATEGORIES.filter((x) => x.slug !== c.slug && (x.group === c.group || c.guides.some((g) => x.guides.includes(g)))).slice(0, 3)
+const desc = `${c.title} at Birdi Hardwares, Lakkar Bazar, Ludhiana: ${c.short} Price on request; ask about availability.`
+const jsonld = [{
+  '@context': 'https://schema.org', '@type': 'CollectionPage', name: c.title, url: abs(path), description: c.short,
+  isPartOf: { '@id': abs('/#store') },
+  mainEntity: { '@type': 'ItemList', itemListElement: c.types.map((t, i) => ({ '@type': 'ListItem', position: i + 1, name: t.name, url: abs(`${path}#${toId(t.name)}`) })) },
+}]
+---
+<Base title={`${c.title} in Ludhiana`} description={desc} path={path} crumbs={[{ name: 'Range', href: '/range/' }, { name: c.title, href: path }]} jsonld={jsonld} image={`${IMAGES[c.slug].src}-1200.jpg`}>
+  <main>
+    <PageStage kicker={c.group} title={c.title} lead={c.short} image={c.slug} enquire={c.title}>
+      <p class="stage-note">Price on request · Ask about availability</p>
+    </PageStage>
+
+    <section class="band">
+      <div class="prose">
+        {c.intro.map((p) => <p>{p}</p>)}
+      </div>
+    </section>
+
+    <section class="band band-shelf" aria-labelledby="types-h">
+      <h2 id="types-h" class="band-title">Types to ask about</h2>
+      <ul class="type-grid">
+        {c.types.map((t) => (
+          <li class="type-card" id={toId(t.name)}>
+            <h3>{t.name}</h3>
+            <p>{t.text}</p>
+            <p class="type-apps">{t.apps.map((a) => APPLICATIONS[a]).join(' · ')}</p>
+            <div class="type-actions">
+              <span class="price">Price on request</span>
+              <a class="btn btn-quiet btn-wa" href={waHref(`${t.name} (${c.title})`) ?? ask(c.title, t.name)} target="_blank" rel="noopener">Ask about {t.name.toLowerCase()}<span class="sr-only"> on WhatsApp (opens in a new tab)</span></a>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p class="fine">General types of hardware, not a stock list. The shop confirms what is available.</p>
+    </section>
+
+    <section class="band split">
+      <div>
+        <h2 class="band-title">Bring these details</h2>
+        <ul class="tick-list">{c.bring.map((b) => <li>{b}</li>)}</ul>
+        <p class="fine">Photos help. Keep them on your phone to show at the shop.</p>
+      </div>
+      <div class="split-aside">
+          <div class="ask-panel">
+            <h2>Request a quotation</h2>
+            <p>Tell the shop what you need, with sizes and finish, and ask for a price. WhatsApp opens with your message ready for you to check and send.</p>
+            <ContactActions item={c.title} form={ask(c.title)} invert />
+          </div>
+      </div>
+    </section>
+
+    {guides.length > 0 && (
+      <section class="band" aria-labelledby="guides-h">
+        <h2 id="guides-h" class="band-title">Helpful guides</h2>
+        <ul class="link-cards">
+          {guides.map((g) => <li><a href={`/guides/${g.slug}/`}><span>{g.title}</span><small>{g.lead}</small></a></li>)}
+        </ul>
+      </section>
+    )}
+
+    <section class="band" aria-labelledby="rel-h">
+      <h2 id="rel-h" class="band-title">Related in the range</h2>
+      <div class="cat-grid three">
+        {related.map((r) => <CategoryCard slug={r.slug} title={r.title} short={r.short} href={`/range/${r.slug}/`} />)}
+      </div>
+    </section>
+  </main>
+</Base>

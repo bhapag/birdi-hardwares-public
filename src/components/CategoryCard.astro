@@ -1,0 +1,22 @@
+---
+// Category tile: image on a plate, title, one line, and an enquiry action. Lit by React Bits SpotlightCard.
+import SpotlightCard from './vendor/SpotlightCard.jsx'
+import { IMAGES } from '../data/catalogue.js'
+interface Props { slug: string; title: string; short: string; href: string; image?: string; label?: string }
+const { slug, title, short, href, image = slug, label } = Astro.props
+const img = IMAGES[image]
+---
+<SpotlightCard client:idle theme="light" spotlightColor="#c9a46a" intensity={0.22} spotlightSize={320} borderGlow={0.5} className="cat-card">
+  <a href={href} class="cat-link">
+    <span class="cat-img">
+      <picture>
+        <source type="image/avif" srcset={`${img.src}-720.avif 720w, ${img.src}-1200.avif 1200w`} sizes="(max-width: 700px) 90vw, (max-width: 1100px) 45vw, 22vw" />
+        <source type="image/webp" srcset={`${img.src}-720.webp 720w, ${img.src}-1200.webp 1200w`} sizes="(max-width: 700px) 90vw, (max-width: 1100px) 45vw, 22vw" />
+        <img src={`${img.src}-1200.jpg`} alt={img.alt} width="1200" height="1500" loading="lazy" decoding="async" />
+      </picture>
+      <span class="chip-tag">{label ?? (img.kind === 'render' ? '3D render' : 'Illustrative')}</span>
+    </span>
+    <span class="cat-title">{title}</span>
+  </a>
+  <p class="cat-short">{short}</p>
+</SpotlightCard>

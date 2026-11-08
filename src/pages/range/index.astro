@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro'
+import PageStage from '../../components/PageStage.astro'
+import CategoryCard from '../../components/CategoryCard.astro'
+import RangeSearch from '../../components/RangeSearch.jsx'
+import { CATEGORIES, APPLICATIONS } from '../../data/catalogue.js'
+import { searchEntries, GROUPS } from '../../lib/searchIndex.js'
+import { abs } from '../../lib/seo.js'
+const entries = searchEntries()
+const jsonld = [{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Hardware range', url: abs('/range/'), isPartOf: { '@id': abs('/#store') },
+  mainEntity: { '@type': 'ItemList', itemListElement: CATEGORIES.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.title, url: abs(`/range/${c.slug}/`) })) } }]
+---
+<Base title="Door hardware range" description="Door locks, digital locks, door closers, hinges, handles, bolts, fittings and spare parts at Birdi Hardwares, Lakkar Bazar, Ludhiana. Search the range; prices on request." path="/range/" crumbs={[{ name: 'Range', href: '/range/' }]} jsonld={jsonld}>
+  <main>
+    <PageStage kicker="The range" title="Everything on the door, in one place." lead="Eight categories of door hardware. Browse them, search for a part, then ask about availability and price." actions={false} />
+    <section class="band" aria-labelledby="cats-h">
+      <h2 id="cats-h" class="band-title">Categories</h2>
+      <div class="cat-grid">
+        {CATEGORIES.map((c) => <CategoryCard slug={c.slug} title={c.title} short={c.short} href={`/range/${c.slug}/`} />)}
+      </div>
+      <p class="fine">Images are illustrations and 3D renders of each category, not photographs of the shop's stock.</p>
+    </section>
+    <section class="band band-shelf" id="search" aria-labelledby="search-h">
+      <h2 id="search-h" class="band-title">Search the range</h2>
+      <RangeSearch client:load entries={entries} groups={GROUPS} apps={APPLICATIONS} />
+    </section>
+  </main>
+</Base>

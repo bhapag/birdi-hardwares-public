@@ -1,0 +1,28 @@
+/* Arial sized to Jost's widths (measured: light 92.4%, regular 95.2%), so text wraps the same before and after the
+   web font arrives and the first screen does not jump when it swaps in. */
+@font-face { font-family: 'Jost Fallback'; src: local('Arial'), local('Helvetica'), local('Liberation Sans'); font-weight: 100 349; size-adjust: 92.4%; ascent-override: 107%; descent-override: 37.5%; line-gap-override: 0%; }
+@font-face { font-family: 'Jost Fallback'; src: local('Arial'), local('Helvetica'), local('Liberation Sans'); font-weight: 350 900; size-adjust: 95.2%; ascent-override: 107%; descent-override: 37.5%; line-gap-override: 0%; }
+:root {
+  color-scheme: light;
+
+  /* Surfaces: ivory plaster and travertine */
+  --ivory: #eee7da;
+  --ivory-2: #e5ddcc;
+  --stone: #d3c8b4;
+
+  /* Ink and timber */
+  --ink: #2a211b;
+  --ink-soft: #5a4e44;
+  --walnut: #3d2718;
+  --walnut-hover: #55371f;
+
+  /* Metal, used sparingly: hairlines, focus accents, active states */
+  --brass: #a98550;
+  --line: rgba(42, 33, 27, 0.14);
+
+  --sans: 'Jost Variable', 'Jost', 'Jost Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --nav-h: 68px;
+  --gutter: clamp(20px, 4.4vw, 72px);
+  --ease-out: cubic-bezier(0.2, 0.7, 0.1, 1);
+}

@@ -1,0 +1,13 @@
+# Cloudflare static asset headers. Indexing is controlled per page (meta robots) and by robots.txt; the old Vercel
+# demo keeps its own noindex header in vercel.json, and the workers.dev / preview hosts are switched off in wrangler.jsonc.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+/img/*
+  Cache-Control: public, max-age=604800
+/media/*
+  Cache-Control: public, max-age=604800
+/catalogue/search.json
+  X-Robots-Tag: noindex

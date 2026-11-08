@@ -1,0 +1,31 @@
+---
+// Catalogue category tiles: a catalogue photo per range (or a line drawing where none exists yet), the range name
+// and its product count. `bento` (home page) gives the two largest ranges double-width tiles.
+import CatIcon from './CatIcon.astro'
+import { SHOP, inCat } from '../data/shop.js'
+interface Props { eager?: number; bento?: boolean }
+const { eager = 4, bento = false } = Astro.props
+const BIG = ['cabinet-handles', 'wardrobe-accessories']
+const cats = SHOP.map((c) => {
+  const items = inCat(c.slug)
+  // wardrobe fittings read better in place: use a ROOT photo taken inside a wardrobe where one exists
+  const life = items.flatMap((p) => p.images).find((im) => im.view.startsWith('in a wardrobe'))
+  return { ...c, n: items.length, img: life || items.find((p) => p.images.length)?.images[0] }
+})
+---
+<ul class={`shop-grid${bento ? ' bento' : ''}`}>
+  {cats.map((c, i) => (
+    <li class={bento && BIG.includes(c.slug) ? 'big' : undefined}>
+      <a class="shop-tile" href={`/catalogue/${c.slug}/`}>
+        <span class="shop-img">
+          {c.img
+            ? <img src={c.img.src} alt="" width={c.img.w} height={c.img.h} loading={i < eager ? 'eager' : 'lazy'} decoding="async" />
+            : <CatIcon name={c.icon} />}
+          <span class="shop-badge">{c.n ? `${c.n} product${c.n > 1 ? 's' : ''}` : 'Enquiry only'}</span>
+        </span>
+        <span class="shop-title">{c.title}<span class="shop-arrow" aria-hidden="true">→</span></span>
+        <span class="shop-n">{c.short}</span>
+      </a>
+    </li>
+  ))}
+</ul>
